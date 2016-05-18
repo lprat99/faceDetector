@@ -1,8 +1,7 @@
-import os,sys
+
 import Image
 import numpy as np
-import random
-import tensorflow as tf
+
 def torgb(img3):
     img2=np.ones(img.shape)
     img2[:, :, 0]= 1.164*(img3[:,:,0] - 16) + 1.596*(img3[:,:,2] - 128)
@@ -28,7 +27,6 @@ b=np.array([
 ])
 
 
-
 skin=np.ones((15,44,44,3))
 skin[0,:,:,:]=np.asarray(Image.open("skin/skinstandart.jpg"),dtype="int32")
 for i in range(1,13):
@@ -36,8 +34,8 @@ for i in range(1,13):
 
 skin[13, :, :, :] = np.asarray(Image.open("skin/skin" + str(33 + 1) + ".jpg"), dtype="int32")
 skin[14, :, :, :] = np.asarray(Image.open("skin/skin" + str(44 + 1) + ".jpg"), dtype="int32")
-
 skin=skin.dot(np.transpose(a))+b
+
 
 r = 65
 img = Image.open("test_images/" + str(r) + ".jpg")
@@ -60,28 +58,22 @@ medm1=np.median(skin[ns,:,:,1])-np.std(skin[ns,:,:,1])*coeff*0.8
 medp1=np.median(skin[ns,:,:,1])+np.std(skin[ns,:,:,1])*coeff*0.4
 medm2=np.median(skin[ns,:,:,2])-np.std(skin[ns,:,:,2])*coeff*0.4
 medp2=np.mean(skin[ns,:,:,2])+np.std(skin[ns,:,:,2])*coeff
+
+
 for i in range (img.shape[0]):
     for i2 in range(img.shape[1]):
         if  medm0<nimg[i,i2,0] < medp0 and medm1<nimg[i,i2,1] <medp1 and medm2<nimg[i,i2,2]<medp2 :
                 nimage[i,i2]=255
 
-
-n=200
-
 im=Image.fromarray(nimage.astype(np.uint8))
 im.save("results/skindetection.jpg")
-indices=np.zeros((2)).astype(int)
+
+n=200
 for i in range(0, img.shape[0] - n, 30):
     for i2 in range(0, img.shape[1] - n, 30):
-
         number = np.sum(nimage[i:i + n, i2:i2 + n]==255)
-
         if number > ((n*n)/2.510):
             print "number ",number
-            max = number
-            indices[0] = i
-            indices[1] = i2
-
             img[i:i + 10, i2:i2 + n, 0] = 255
             img[i:i + 10, i2:i2 + n, 1] = 0
             img[i:i + 10, i2:i2 + n, 2] = 0
@@ -98,9 +90,6 @@ for i in range(0, img.shape[0] - n, 30):
             img[i:i + n, i2 + n:i2 + 10 + n, 1] = 0
             img[i:i + n, i2 + n:i2 + 10 + n, 2] = 0
 
-
-i = indices[0]
-i2 = indices[1]
 
 
 
