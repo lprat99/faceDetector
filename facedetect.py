@@ -37,7 +37,7 @@ skin[14, :, :, :] = np.asarray(Image.open("skin/skin" + str(44 + 1) + ".jpg"), d
 skin=skin.dot(np.transpose(a))+b
 
 
-r = 65
+r = 45
 img = Image.open("test_images/" + str(r) + ".jpg")
 img = np.asarray(img, dtype="int32")
 nimg=np.ones((img.shape[0],img.shape[1],3))
@@ -46,33 +46,52 @@ simageall = np.ones((img.shape[0], img.shape[1], 3, 14))
 nimage=np.zeros((img.shape[0],img.shape[1]))
 coeff=6
 ns=13
-mini=100000000000000000000
+maxi=00
 for i in range(0,15):
-    if np.sum(abs(nimg[:,:,0]-np.median(skin[i,:,:,1])))+np.sum(abs(nimg[:,:,1]-np.median(skin[i,:,:,1])))+np.sum(abs(nimg[:,:,2]-np.median(skin[i,:,:,2])))<mini:
-        mini=np.sum(abs(nimg[:,:,0]-np.median(skin[ns,:,:,0])))+np.sum(abs(nimg[:,:,1]-np.median(skin[ns,:,:,1])))+np.sum(abs(nimg[:,:,2]-np.median(skin[ns,:,:,2])))
+    medm0=np.median(skin[i,:,:,0])-np.std(skin[i,:,:,0])*coeff
+    medp0=np.median(skin[i,:,:,0])+np.std(skin[i,:,:,0])*coeff*4.5
+    medm1=np.median(skin[i,:,:,1])-np.std(skin[i,:,:,1])*coeff*0.8
+    medp1=np.median(skin[i,:,:,1])+np.std(skin[i,:,:,1])*coeff*0.4
+    medm2=np.median(skin[i,:,:,2])-np.std(skin[i,:,:,2])*coeff*0.4
+    medp2=np.mean(skin[i,:,:,2])+np.std(skin[i,:,:,2])*coeff
+    inter=nimg
+    if np.sum(np.where(medm0<nimg[:,:,0])>medp0)+np.sum(np.where(medm1<nimg[:,:,1])>medp1)+np.sum(np.where(medm2<nimg[:,:,2])>medp2)>maxi:
+        maxi=np.sum(np.where(medm0<nimg[:,:,0])>medp0)+np.sum(np.where(medm1<nimg[:,:,1])>medp1)+np.sum(np.where(medm2<nimg[:,:,2])>medp2)
+        print np.sum(np.where(medm0 < nimg[:, :, 0]) > medp0) + np.sum(
+            np.where(medm1 < nimg[:, :, 1]) > medp1) + np.sum(np.where(medm2 < nimg[:, :, 2]) > medp2)
+
         ns=i
 print ns
-medm0=np.median(skin[ns,:,:,0])-np.std(skin[ns,:,:,0])*coeff
-medp0=np.median(skin[ns,:,:,0])+np.std(skin[ns,:,:,0])*coeff*4.5
-medm1=np.median(skin[ns,:,:,1])-np.std(skin[ns,:,:,1])*coeff*0.8
-medp1=np.median(skin[ns,:,:,1])+np.std(skin[ns,:,:,1])*coeff*0.4
-medm2=np.median(skin[ns,:,:,2])-np.std(skin[ns,:,:,2])*coeff*0.4
-medp2=np.mean(skin[ns,:,:,2])+np.std(skin[ns,:,:,2])*coeff
+print medp1
+interimage=nimg[:,:,0]
+interimage1=nimg[:,:,1]
+interimage2=nimg[:,:,2]
+
+interimage[(interimage<medm0)]=0
+interimage[(interimage>medp0)]=0
+
+interimage1[interimage==0]=0
+interimage1[(interimage1<medm1)]=0
+interimage1[(interimage1>medp1)]=0
+
+interimage2[interimage1==0]=0
+interimage2[(interimage2<medm2)]=0
+interimage2[(interimage2>medp2)]=0
+interimage2[(interimage2!=0)]=255
+print np.sum(interimage2==255)
 
 
-for i in range (img.shape[0]):
-    for i2 in range(img.shape[1]):
-        if  medm0<nimg[i,i2,0] < medp0 and medm1<nimg[i,i2,1] <medp1 and medm2<nimg[i,i2,2]<medp2 :
-                nimage[i,i2]=255
+print nimg
 
-im=Image.fromarray(nimage.astype(np.uint8))
+im=Image.fromarray(interimage2.astype(np.uint8))
 im.save("results/skindetection.jpg")
 
 n=200
+print ((np.sum(interimage2==255)*1000/(nimg.shape[0]*nimg.shape[1])))
 for i in range(0, img.shape[0] - n, 30):
     for i2 in range(0, img.shape[1] - n, 30):
-        number = np.sum(nimage[i:i + n, i2:i2 + n]==255)
-        if number > ((n*n)/2.510):
+        number = np.sum(interimage2[i:i + n, i2:i2 + n]==255)*1000/(n*n)
+        if number > ((np.sum(interimage2==255)*1000/(nimg.shape[0]*nimg.shape[1])))*3:
             print "number ",number
             img[i:i + 10, i2:i2 + n, 0] = 255
             img[i:i + 10, i2:i2 + n, 1] = 0
